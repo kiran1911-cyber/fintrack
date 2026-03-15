@@ -1,5 +1,7 @@
 import * as oidc from "openid-client";
 import { Router, type IRouter, type Request, type Response } from "express";
+import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
 import {
   GetCurrentAuthUserResponse,
   ExchangeMobileAuthorizationCodeBody,
@@ -88,6 +90,86 @@ router.get("/auth/user", (req: Request, res: Response) => {
       user: req.isAuthenticated() ? req.user : null,
     }),
   );
+});
+
+router.post("/auth/register", async (req: Request, res: Response) => {
+  try {
+    const { username, email, password, firstName, lastName } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: "username, email and password are required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
+    }
+
+    const existing = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, email))
+      .limit(1);
+    if (existing.length > 0) {
+      return res.status(409).json({ error: "An account with this email already exists" });
+    }
+
+    const existingUsername = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.username, username))
+      .limit(1);
+    if (existingUsername.length > 0) {
+      return res.status(409).json({ error: "Username is already taken" });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const [newUser] = await db
+      .insert(usersTable)
+      .values({ username, email, passwordHash, firstName, lastName })
+      .returning();
+
+    await new Promise<void>((resolve, reject) => {
+      req.login(newUser, (err) => (err ? reject(err) : resolve()));
+    });
+
+    return res.json({ user: newUser });
+  } catch (err) {
+    console.error("Register error:", err);
+    return res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+router.post("/auth/local-login", async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const [user] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, email))
+      .limit(1);
+
+    if (!user || !user.passwordHash) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      req.login(user, (err) => (err ? reject(err) : resolve()));
+    });
+
+    return res.json({ user });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ error: "Login failed" });
+  }
 });
 
 router.get("/login", async (req: Request, res: Response) => {
