@@ -11,5 +11,6 @@ export interface UserInfo {
   username?: string;
   firstName?: string;
   lastName?: string;
-  profileImage?: string;
+  profileImage?: string | null;
+  email?: string | null;
 }

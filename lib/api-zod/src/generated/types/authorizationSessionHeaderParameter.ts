@@ -5,8 +5,8 @@
  * FinTrack AI API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { UserInfo } from "./userInfo";
 
-export interface GetCurrentAuthUserResponse {
-  user: UserInfo | null;
-}
+/**
+ * Opaque session token — `Bearer <sid>`.
+ */
+export type AuthorizationSessionHeaderParameter = string;

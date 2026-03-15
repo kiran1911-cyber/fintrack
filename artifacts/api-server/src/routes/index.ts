@@ -4,6 +4,7 @@ import authRouter from "./auth";
 import expensesRouter from "./expenses";
 import investmentRouter from "./investment";
 import chatRouter from "./chat";
+import walletsRouter from "./wallets";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(authRouter);
 router.use(expensesRouter);
 router.use(investmentRouter);
 router.use(chatRouter);
+router.use(walletsRouter);
 
 export default router;

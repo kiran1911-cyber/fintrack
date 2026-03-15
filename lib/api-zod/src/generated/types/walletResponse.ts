@@ -5,8 +5,8 @@
  * FinTrack AI API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { UserInfo } from "./userInfo";
+import type { LinkedWallet } from "./linkedWallet";
 
-export interface GetCurrentAuthUserResponse {
-  user: UserInfo | null;
+export interface WalletResponse {
+  wallet: LinkedWallet;
 }

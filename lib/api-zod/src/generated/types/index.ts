@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./authorizationSessionHeaderParameter";
+export * from "./beginBrowserLoginParams";
 export * from "./categoryBreakdown";
 export * from "./chatMessage";
 export * from "./chatMessageBody";
@@ -14,16 +16,26 @@ export * from "./createExpenseBody";
 export * from "./dailyTotal";
 export * from "./deleteResponse";
 export * from "./errorResponse";
+export * from "./exchangeMobileAuthorizationCodeBody";
+export * from "./exchangeMobileAuthorizationCodeResponse";
 export * from "./expense";
 export * from "./expenseListResponse";
 export * from "./expenseResponse";
 export * from "./getCurrentAuthUserResponse";
 export * from "./getMonthlySummaryParams";
+export * from "./handleBrowserLoginCallbackParams";
 export * from "./healthStatus";
 export * from "./investmentAdviceBody";
 export * from "./investmentAdviceResponse";
 export * from "./investmentRecommendation";
+export * from "./linkedWallet";
+export * from "./linkWalletBody";
 export * from "./listExpensesParams";
+export * from "./logoutMobileSessionResponse";
 export * from "./monthlySummaryResponse";
+export * from "./portfolioHolding";
 export * from "./updateExpenseBody";
 export * from "./userInfo";
+export * from "./walletListResponse";
+export * from "./walletPortfolioResponse";
+export * from "./walletResponse";

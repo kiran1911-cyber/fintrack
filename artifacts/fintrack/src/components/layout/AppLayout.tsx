@@ -24,6 +24,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { icon: LayoutDashboard, label: "Dashboard", href: "/" },
     { icon: Receipt, label: "Expenses", href: "/expenses" },
     { icon: TrendingUp, label: "Investments", href: "/investments" },
+    { icon: Wallet, label: "Wallets", href: "/wallets" },
     { icon: MessageSquare, label: "AI Advisor", href: "/chat" },
   ];
 

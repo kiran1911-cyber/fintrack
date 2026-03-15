@@ -17,17 +17,80 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Get current authenticated user
  */
+export const GetCurrentAuthUserHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
 export const GetCurrentAuthUserResponse = zod.object({
-  authenticated: zod.boolean(),
-  user: zod
-    .object({
+  user: zod.union([
+    zod.object({
       id: zod.string(),
       username: zod.string().optional(),
       firstName: zod.string().optional(),
       lastName: zod.string().optional(),
-      profileImage: zod.string().optional(),
-    })
-    .optional(),
+      profileImage: zod.string().nullish(),
+      email: zod.string().nullish(),
+    }),
+    zod.null(),
+  ]),
+});
+
+/**
+ * @summary Start the browser OIDC login flow
+ */
+export const BeginBrowserLoginQueryParams = zod.object({
+  returnTo: zod.coerce.string().optional(),
+});
+
+/**
+ * @summary Complete the browser OIDC login flow
+ */
+export const HandleBrowserLoginCallbackQueryParams = zod.object({
+  code: zod.coerce.string().optional(),
+  state: zod.coerce.string().optional(),
+});
+
+/**
+ * @summary Clear the session and begin OIDC logout
+ */
+export const LogoutBrowserSessionHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+/**
+ * @summary Exchange a mobile OIDC code for a session token
+ */
+
+export const ExchangeMobileAuthorizationCodeBody = zod.object({
+  code: zod.string().min(1),
+  code_verifier: zod.string().min(1),
+  redirect_uri: zod.string().min(1),
+  state: zod.string().min(1),
+  nonce: zod.string().min(1).optional(),
+});
+
+export const ExchangeMobileAuthorizationCodeResponse = zod.object({
+  token: zod.string(),
+});
+
+/**
+ * @summary Delete a mobile session token
+ */
+export const LogoutMobileSessionHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const LogoutMobileSessionResponse = zod.object({
+  success: zod.boolean(),
 });
 
 /**
@@ -185,6 +248,86 @@ export const GetInvestmentAdviceResponse = zod.object({
   summary: zod.string(),
   emergencyFundAdvice: zod.string(),
   savingsRate: zod.number(),
+});
+
+/**
+ * @summary Get all linked wallets for current user
+ */
+export const GetLinkedWalletsResponse = zod.object({
+  wallets: zod.array(
+    zod.object({
+      id: zod.number(),
+      userId: zod.string(),
+      provider: zod.string(),
+      label: zod.string(),
+      maskedKey: zod.string().optional(),
+      status: zod.string(),
+      createdAt: zod.string(),
+    }),
+  ),
+});
+
+/**
+ * @summary Link a wallet or trading account
+ */
+export const LinkWalletBody = zod.object({
+  provider: zod.string(),
+  label: zod.string(),
+  apiKey: zod.string().optional(),
+  secretKey: zod.string().optional(),
+});
+
+export const LinkWalletResponse = zod.object({
+  wallet: zod.object({
+    id: zod.number(),
+    userId: zod.string(),
+    provider: zod.string(),
+    label: zod.string(),
+    maskedKey: zod.string().optional(),
+    status: zod.string(),
+    createdAt: zod.string(),
+  }),
+});
+
+/**
+ * @summary Unlink a wallet
+ */
+export const UnlinkWalletParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UnlinkWalletResponse = zod.object({
+  success: zod.boolean(),
+  message: zod.string(),
+});
+
+/**
+ * @summary Get mock portfolio data for a linked wallet
+ */
+export const GetWalletPortfolioParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetWalletPortfolioResponse = zod.object({
+  provider: zod.string(),
+  totalValue: zod.number(),
+  totalInvested: zod.number(),
+  totalGainLoss: zod.number(),
+  totalGainLossPercent: zod.number(),
+  holdings: zod.array(
+    zod.object({
+      symbol: zod.string(),
+      name: zod.string(),
+      quantity: zod.number(),
+      currentPrice: zod.number(),
+      currentValue: zod.number(),
+      gainLoss: zod.number(),
+      gainLossPercent: zod.number(),
+      type: zod.string(),
+    }),
+  ),
+  lastUpdated: zod.string(),
+  isSimulated: zod.boolean(),
 });
 
 /**

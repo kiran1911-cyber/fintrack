@@ -350,6 +350,118 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /wallets:
+    get:
+      operationId: getLinkedWallets
+      tags: [wallets]
+      summary: Get all linked wallets for current user
+      responses:
+        "200":
+          description: List of linked wallets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /wallets/link:
+    post:
+      operationId: linkWallet
+      tags: [wallets]
+      summary: Link a wallet or trading account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinkWalletBody"
+      responses:
+        "200":
+          description: Wallet linked successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /wallets/{id}/unlink:
+    delete:
+      operationId: unlinkWallet
+      tags: [wallets]
+      summary: Unlink a wallet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Wallet unlinked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /wallets/{id}/portfolio:
+    get:
+      operationId: getWalletPortfolio
+      tags: [wallets]
+      summary: Get mock portfolio data for a linked wallet
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Portfolio data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WalletPortfolioResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /chat/message:
     post:
       operationId: sendChatMessage
@@ -382,6 +494,22 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
 components:
+  parameters:
+    AuthorizationSessionHeader:
+      name: Authorization
+      in: header
+      required: false
+      description: Opaque session token — `Bearer <sid>`.
+      schema:
+        type: string
+    SessionCookie:
+      name: sid
+      in: cookie
+      required: false
+      description: Browser session cookie.
+      schema:
+        type: string
+
   schemas:
     HealthStatus:
       type: object
@@ -394,12 +522,12 @@ components:
     GetCurrentAuthUserResponse:
       type: object
       properties:
-        authenticated:
-          type: boolean
         user:
-          $ref: "#/components/schemas/UserInfo"
+          oneOf:
+            - $ref: "#/components/schemas/UserInfo"
+            - type: "null"
       required:
-        - authenticated
+        - user
 
     UserInfo:
       type: object
@@ -414,6 +542,10 @@ components:
           type: string
         profileImage:
           type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
       required:
         - id
 
@@ -666,6 +798,158 @@ components:
       required:
         - success
         - message
+
+    LinkedWallet:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        provider:
+          type: string
+        label:
+          type: string
+        maskedKey:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - provider
+        - label
+        - status
+        - createdAt
+
+    LinkWalletBody:
+      type: object
+      properties:
+        provider:
+          type: string
+        label:
+          type: string
+        apiKey:
+          type: string
+        secretKey:
+          type: string
+      required:
+        - provider
+        - label
+
+    WalletResponse:
+      type: object
+      properties:
+        wallet:
+          $ref: "#/components/schemas/LinkedWallet"
+      required:
+        - wallet
+
+    WalletListResponse:
+      type: object
+      properties:
+        wallets:
+          type: array
+          items:
+            $ref: "#/components/schemas/LinkedWallet"
+      required:
+        - wallets
+
+    PortfolioHolding:
+      type: object
+      properties:
+        symbol:
+          type: string
+        name:
+          type: string
+        quantity:
+          type: number
+        currentPrice:
+          type: number
+        currentValue:
+          type: number
+        gainLoss:
+          type: number
+        gainLossPercent:
+          type: number
+        type:
+          type: string
+      required:
+        - symbol
+        - name
+        - quantity
+        - currentPrice
+        - currentValue
+        - gainLoss
+        - gainLossPercent
+        - type
+
+    WalletPortfolioResponse:
+      type: object
+      properties:
+        provider:
+          type: string
+        totalValue:
+          type: number
+        totalInvested:
+          type: number
+        totalGainLoss:
+          type: number
+        totalGainLossPercent:
+          type: number
+        holdings:
+          type: array
+          items:
+            $ref: "#/components/schemas/PortfolioHolding"
+        lastUpdated:
+          type: string
+        isSimulated:
+          type: boolean
+      required:
+        - provider
+        - totalValue
+        - totalInvested
+        - totalGainLoss
+        - totalGainLossPercent
+        - holdings
+        - lastUpdated
+        - isSimulated
+
+    ExchangeMobileAuthorizationCodeBody:
+      type: object
+      required: [code, code_verifier, redirect_uri, state]
+      properties:
+        code:
+          type: string
+          minLength: 1
+        code_verifier:
+          type: string
+          minLength: 1
+        redirect_uri:
+          type: string
+          minLength: 1
+        state:
+          type: string
+          minLength: 1
+        nonce:
+          type: string
+          minLength: 1
+
+    ExchangeMobileAuthorizationCodeResponse:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+
+    LogoutMobileSessionResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
 
     ErrorResponse:
       type: object

@@ -14,12 +14,12 @@ export interface UserInfo {
   username?: string;
   firstName?: string;
   lastName?: string;
-  profileImage?: string;
+  profileImage?: string | null;
+  email?: string | null;
 }
 
 export interface GetCurrentAuthUserResponse {
-  authenticated: boolean;
-  user?: UserInfo;
+  user: UserInfo | null;
 }
 
 export interface Expense {
@@ -126,10 +126,92 @@ export interface DeleteResponse {
   message: string;
 }
 
+export interface LinkedWallet {
+  id: number;
+  userId: string;
+  provider: string;
+  label: string;
+  maskedKey?: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface LinkWalletBody {
+  provider: string;
+  label: string;
+  apiKey?: string;
+  secretKey?: string;
+}
+
+export interface WalletResponse {
+  wallet: LinkedWallet;
+}
+
+export interface WalletListResponse {
+  wallets: LinkedWallet[];
+}
+
+export interface PortfolioHolding {
+  symbol: string;
+  name: string;
+  quantity: number;
+  currentPrice: number;
+  currentValue: number;
+  gainLoss: number;
+  gainLossPercent: number;
+  type: string;
+}
+
+export interface WalletPortfolioResponse {
+  provider: string;
+  totalValue: number;
+  totalInvested: number;
+  totalGainLoss: number;
+  totalGainLossPercent: number;
+  holdings: PortfolioHolding[];
+  lastUpdated: string;
+  isSimulated: boolean;
+}
+
+export interface ExchangeMobileAuthorizationCodeBody {
+  /** @minLength 1 */
+  code: string;
+  /** @minLength 1 */
+  code_verifier: string;
+  /** @minLength 1 */
+  redirect_uri: string;
+  /** @minLength 1 */
+  state: string;
+  /** @minLength 1 */
+  nonce?: string;
+}
+
+export interface ExchangeMobileAuthorizationCodeResponse {
+  token: string;
+}
+
+export interface LogoutMobileSessionResponse {
+  success: boolean;
+}
+
 export interface ErrorResponse {
   error: string;
   details?: string;
 }
+
+/**
+ * Opaque session token — `Bearer <sid>`.
+ */
+export type AuthorizationSessionHeaderParameter = string;
+
+export type BeginBrowserLoginParams = {
+  returnTo?: string;
+};
+
+export type HandleBrowserLoginCallbackParams = {
+  code?: string;
+  state?: string;
+};
 
 export type ListExpensesParams = {
   month?: number;

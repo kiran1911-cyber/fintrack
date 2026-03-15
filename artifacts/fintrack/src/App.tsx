@@ -12,6 +12,7 @@ import Expenses from "@/pages/Expenses";
 import ExpenseForm from "@/pages/ExpenseForm";
 import Investments from "@/pages/Investments";
 import AiChat from "@/pages/AiChat";
+import Wallets from "@/pages/Wallets";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -53,6 +54,7 @@ function Router() {
       <Route path="/expenses/new" component={ExpenseForm} />
       <Route path="/expenses/:id/edit" component={ExpenseForm} />
       <Route path="/investments" component={Investments} />
+      <Route path="/wallets" component={Wallets} />
       <Route path="/chat" component={AiChat} />
       <Route component={NotFound} />
     </Switch>
