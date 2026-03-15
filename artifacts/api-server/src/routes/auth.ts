@@ -92,12 +92,27 @@ router.get("/auth/user", (req: Request, res: Response) => {
   );
 });
 
+async function createLocalSession(res: Response, user: { id: string; email?: string | null; username?: string | null; firstName?: string | null; lastName?: string | null; profileImageUrl?: string | null }) {
+  const sid = await createSession({
+    user: {
+      id: user.id,
+      email: user.email ?? undefined,
+      username: user.username ?? undefined,
+      firstName: user.firstName ?? undefined,
+      lastName: user.lastName ?? undefined,
+      profileImage: user.profileImageUrl ?? undefined,
+    },
+    access_token: "local",
+  });
+  setSessionCookie(res, sid);
+}
+
 router.post("/auth/register", async (req: Request, res: Response) => {
   try {
     const { username, email, password, firstName, lastName } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({ error: "username, email and password are required" });
+      return res.status(400).json({ error: "Username, email and password are required" });
     }
     if (password.length < 6) {
       return res.status(400).json({ error: "Password must be at least 6 characters" });
@@ -127,10 +142,7 @@ router.post("/auth/register", async (req: Request, res: Response) => {
       .values({ username, email, passwordHash, firstName, lastName })
       .returning();
 
-    await new Promise<void>((resolve, reject) => {
-      req.login(newUser, (err) => (err ? reject(err) : resolve()));
-    });
-
+    await createLocalSession(res, newUser);
     return res.json({ user: newUser });
   } catch (err) {
     console.error("Register error:", err);
@@ -161,14 +173,112 @@ router.post("/auth/local-login", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    await new Promise<void>((resolve, reject) => {
-      req.login(user, (err) => (err ? reject(err) : resolve()));
-    });
-
+    await createLocalSession(res, user);
     return res.json({ user });
   } catch (err) {
     console.error("Login error:", err);
     return res.status(500).json({ error: "Login failed" });
+  }
+});
+
+router.get("/auth/google", (req: Request, res: Response) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    return res.status(503).json({ error: "Google login is not configured" });
+  }
+  const origin = getOrigin(req);
+  const callbackUrl = `${origin}/api/auth/google/callback`;
+  const state = encodeURIComponent(getSafeReturnTo(req.query.returnTo));
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: callbackUrl,
+    response_type: "code",
+    scope: "openid email profile",
+    state,
+    access_type: "offline",
+    prompt: "select_account",
+  });
+  return res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+});
+
+router.get("/auth/google/callback", async (req: Request, res: Response) => {
+  try {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    if (!clientId || !clientSecret) {
+      return res.redirect("/?error=google_not_configured");
+    }
+
+    const code = req.query.code as string;
+    const returnTo = getSafeReturnTo(decodeURIComponent((req.query.state as string) || "/"));
+
+    if (!code) {
+      return res.redirect(`${returnTo}?error=google_denied`);
+    }
+
+    const origin = getOrigin(req);
+    const callbackUrl = `${origin}/api/auth/google/callback`;
+
+    const tokenResp = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: callbackUrl,
+        grant_type: "authorization_code",
+      }),
+    });
+
+    const tokens = await tokenResp.json() as { access_token?: string; error?: string };
+    if (!tokens.access_token) {
+      console.error("Google token error:", tokens);
+      return res.redirect("/?error=google_token_failed");
+    }
+
+    const profileResp = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
+    });
+    const profile = await profileResp.json() as {
+      sub: string; email: string; given_name?: string; family_name?: string; picture?: string; name?: string;
+    };
+
+    if (!profile.email) {
+      return res.redirect("/?error=google_no_email");
+    }
+
+    const [existing] = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, profile.email))
+      .limit(1);
+
+    let user = existing;
+    if (!user) {
+      const [created] = await db
+        .insert(usersTable)
+        .values({
+          email: profile.email,
+          firstName: profile.given_name ?? profile.name ?? null,
+          lastName: profile.family_name ?? null,
+          profileImageUrl: profile.picture ?? null,
+          username: profile.email.split("@")[0],
+        })
+        .returning();
+      user = created;
+    } else if (!user.profileImageUrl && profile.picture) {
+      await db.update(usersTable)
+        .set({ profileImageUrl: profile.picture })
+        .where(eq(usersTable.id, user.id));
+      user.profileImageUrl = profile.picture;
+    }
+
+    await createLocalSession(res, user);
+    return res.redirect(returnTo);
+  } catch (err) {
+    console.error("Google callback error:", err);
+    return res.redirect("/?error=google_failed");
   }
 });
 
