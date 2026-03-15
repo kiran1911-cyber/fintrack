@@ -1,0 +1,22 @@
+packages:
+  "recharts": "Dashboard analytics charts and data visualization"
+  "zustand": "State management for filters and chat history"
+  "date-fns": "Human-readable date formatting and manipulation"
+  "framer-motion": "Page transitions and scroll-triggered animations"
+  "@hookform/resolvers": "Zod validation with react-hook-form"
+  "react-hook-form": "Form state management"
+  "zod": "Schema validation"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility function to efficiently merge Tailwind CSS classes in JS"
+
+images:
+  - path: "artifacts/fintrack/public/images/login-bg.png"
+    description: "Abstract dark navy background with glowing emerald green financial charts and mesh gradients, very subtle, cinematic, 4k"
+    aspect_ratio: "16:9"
+  - path: "artifacts/fintrack/public/images/chat-avatar.png"
+    description: "Modern abstract AI assistant robot avatar in emerald green and navy blue colors, clean vector style, minimal"
+    aspect_ratio: "1:1"
+
+notes:
+  - using @workspace/replit-auth-web for authentication
+  - using @workspace/api-client-react for generated React Query hooks
