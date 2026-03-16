@@ -4,20 +4,52 @@
 
 **FinTrack AI** — Full-stack personal finance app with expense tracking, investment advisor, AI chat, and wallet linking (Groww & Binance).
 
-## Stack
+## 🧰 Tech Stack
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
-- **Frontend**: React + Vite + Tailwind CSS v4 + Recharts + Zustand + Framer Motion
-- **Auth**: Replit Auth (OIDC/PKCE) via `@workspace/replit-auth-web`
+### Frontend
+- **React** – UI development
+- **Vite** – Fast frontend build tool
+- **Tailwind CSS v4** – Utility-first styling
+- **Recharts** – Data visualization for finance charts
+- **Zustand** – Lightweight state management
+- **Framer Motion** – Animations and UI transitions
+- **React Hook Form** – Form handling
+- **Zod** – Form validation
 
+### Backend
+- **Node.js (v24)** – Runtime environment
+- **Express.js v5** – REST API framework
+- **TypeScript (v5.9)** – Type-safe development
+- **Drizzle ORM** – Database ORM for PostgreSQL
+- **Zod + drizzle-zod** – Schema validation
+- **Orval** – OpenAPI client code generation
+- **esbuild** – Fast backend bundler
+
+### Database
+- **PostgreSQL** – Primary relational database
+
+### Authentication
+- **Replit Auth (OIDC + PKCE)** – Secure authentication
+- **Cookie-based sessions** stored in PostgreSQL
+
+### AI Integration
+- **OpenAI GPT-4o-mini** – AI chatbot for financial guidance
+- **Fallback rule-based AI responses** for common queries
+
+### Dev Tools & Monorepo
+- **pnpm workspaces** – Monorepo package management
+- **OpenAPI** – API specification
+- **ESLint + Prettier** *(optional)* – Code quality
+
+### Data Visualization
+- **Recharts** – Bar charts, pie charts, analytics dashboard
+
+### Progressive Web App
+- **PWA Manifest** – Installable web application support
+
+### External Integrations
+- **Groww API (simulated)** – Investment portfolio tracking
+- **Binance API (optional)** – Crypto wallet linking
 ## Structure
 
 ```text
